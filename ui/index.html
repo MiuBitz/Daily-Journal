@@ -1,140 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
   <title>Daily Journal</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="preload" href="fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    try {
+      const appearance = JSON.parse(localStorage.getItem('daily-journal-appearance'));
+      if (appearance) { document.documentElement.dataset.theme = appearance.theme_mode; document.documentElement.dataset.preset = appearance.color_preset; }
+    } catch {}
+  </script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
-    <!-- Header -->
+  <main class="app-container">
     <header class="app-header">
-      <div class="header-left">
-        <h1>Daily Journal</h1>
-        <p class="subtitle">Three tiny check-ins. One clean Markdown dataset.</p>
-      </div>
-      <div class="header-right">
-        <button class="btn btn-icon" id="btn-settings-toggle" title="Settings">⚙ Settings</button>
-        <div class="status-badge">
-          <span class="dot">●</span> Tray Active
-        </div>
-      </div>
+      <div><h1>Daily Journal</h1><p class="subtitle">A moment to reflect.</p></div>
+      <button class="btn btn-icon" id="settings" title="Settings">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg>
+        Settings
+      </button>
     </header>
 
-    <!-- Main Dashboard: Today's Check-in Blocks Card -->
-    <section class="card">
-      <h2 class="card-title" id="today-heading">📅 Today</h2>
-      
-      <div class="block-list">
-        <div class="block-item">
-          <div class="block-info">
-            <span class="block-name">Morning Check-in</span>
-            <span class="block-time" id="time-morning">Time Window: 05:00 – 12:00</span>
-          </div>
-          <button class="btn btn-primary" id="btn-write-morning">✏ Write Journal</button>
-        </div>
-
-        <div class="block-item">
-          <div class="block-info">
-            <span class="block-name">Afternoon Check-in</span>
-            <span class="block-time" id="time-afternoon">Time Window: 12:00 – 18:00</span>
-          </div>
-          <button class="btn btn-primary" id="btn-write-afternoon">✏ Write Journal</button>
-        </div>
-
-        <div class="block-item">
-          <div class="block-info">
-            <span class="block-name">Evening Check-in</span>
-            <span class="block-time" id="time-evening">Time Window: 18:00 – 22:00</span>
-          </div>
-          <button class="btn btn-primary" id="btn-write-evening">✏ Write Journal</button>
-        </div>
-      </div>
+    <section class="day-section" aria-label="Choose a day and work block">
+      <div class="day-heading"><label for="date">Your day</label><input type="date" id="date" class="text-input"></div>
+      <div id="blocks" class="block-list" aria-label="Work blocks"></div>
     </section>
 
-    <!-- Toolbar Actions -->
-    <div class="toolbar">
-      <button class="btn btn-secondary" id="btn-create-today">📝 Create Today's Files</button>
-      <button class="btn btn-secondary" id="btn-open-folder">📂 Open Journal Folder</button>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="toast hidden"></div>
-  </div>
-
-  <!-- Settings Modal Panel -->
-  <div id="settings-modal" class="modal-overlay hidden">
-    <div class="modal-card settings-card">
-      <div class="modal-header">
-        <h2>⚙ Settings</h2>
-        <button class="btn-close" id="btn-close-settings">✕</button>
+    <form id="entry" class="editor">
+      <div class="editor-heading"><h2 id="entry-title">What did you do?</h2><p id="entry-time" class="hint"></p></div>
+      <label for="work" class="field-label">What did you work on?</label>
+      <textarea id="work" rows="5" placeholder="A few words about what you did..." required></textarea>
+      <details id="notes-details">
+        <summary>Notes <span class="hint">(optional)</span></summary>
+        <textarea aria-label="Optional notes" id="notes" rows="2" placeholder="A win, a distraction, or something to remember."></textarea>
+      </details>
+      <div class="save-row">
+        <div><p id="draft-status" class="hint" aria-live="polite"></p><p class="shortcut">Ctrl + Enter to save</p></div>
+        <button type="submit" class="btn btn-primary" id="save">Save &amp; continue</button>
       </div>
+    </form>
 
-      <div class="setting-row">
-        <label class="checkbox-label">
-          <input type="checkbox" id="chk-autostart" />
-          <span>Start automatically with Windows</span>
-        </label>
-        <span class="hint">App stays in system tray when closed.</span>
-      </div>
+    <footer class="toolbar">
+      <button class="btn btn-link" id="week"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7zM14 3v5h4M10 12h5M10 16h5"/></svg>Weekly text</button>
+      <button class="btn btn-link" id="folder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7V5h6l2 2h10v13H3z"/></svg>Open folder</button>
+      <span class="hint weekly-hint">One file per week</span>
+    </footer>
+    <div id="toast" class="toast hidden" role="status"></div>
+  </main>
 
+  <dialog id="settings-dialog" class="settings-card" aria-labelledby="settings-title">
+    <form id="settings-form">
+      <div class="modal-header"><div><h2 id="settings-title">Settings</h2><p class="hint">Make the day fit your routine.</p></div><button type="button" id="close-settings" class="btn btn-close" aria-label="Close settings"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+      <section class="appearance-settings" aria-labelledby="appearance-title">
+        <div class="appearance-mode"><h3 id="appearance-title">Appearance</h3><label for="theme-mode" class="visually-hidden">Theme mode</label><select id="theme-mode" class="text-input"><option value="dark">Dark</option><option value="light">Light</option></select></div>
+        <fieldset class="preset-list"><legend>Color</legend>
+          <label class="preset-choice"><input id="color-violet" type="radio" name="color-preset" value="violet"><span class="swatch violet"></span>Violet</label>
+          <label class="preset-choice"><input id="color-blue" type="radio" name="color-preset" value="blue"><span class="swatch blue"></span>Blue</label>
+          <label class="preset-choice"><input id="color-sage" type="radio" name="color-preset" value="sage"><span class="swatch sage"></span>Sage</label>
+          <label class="preset-choice"><input id="color-amber" type="radio" name="color-preset" value="amber"><span class="swatch amber"></span>Amber</label>
+        </fieldset>
+      </section>
       <div class="divider"></div>
-
-      <h3 class="section-subtitle">Configure Reminder Times (24h HH:MM):</h3>
-
-      <div class="schedule-inputs">
-        <div class="schedule-row">
-          <label class="checkbox-label">
-            <input type="checkbox" id="chk-rem-morning" />
-            <span>Morning reminder at:</span>
-          </label>
-          <input type="text" id="time-input-morning" class="text-input time-input" placeholder="12:00" />
-        </div>
-
-        <div class="schedule-row">
-          <label class="checkbox-label">
-            <input type="checkbox" id="chk-rem-afternoon" />
-            <span>Afternoon reminder at:</span>
-          </label>
-          <input type="text" id="time-input-afternoon" class="text-input time-input" placeholder="18:00" />
-        </div>
-
-        <div class="schedule-row">
-          <label class="checkbox-label">
-            <input type="checkbox" id="chk-rem-evening" />
-            <span>Evening reminder at:</span>
-          </label>
-          <input type="text" id="time-input-evening" class="text-input time-input" placeholder="22:00" />
-        </div>
-      </div>
-
+      <div class="settings-section-heading"><h3>Work blocks</h3><span class="hint">Remind at the end</span></div>
+      <div id="block-settings"></div>
+      <button type="button" class="btn btn-link add-block" id="add-block">+ Add block</button>
       <div class="divider"></div>
-
-      <h3 class="section-subtitle">📁 Journal Storage Folder:</h3>
-      <div class="folder-picker">
-        <input type="text" id="folder-path" class="text-input folder-input" readonly />
-        <button class="btn btn-outline" id="btn-browse-folder">Browse...</button>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-primary" id="btn-save-settings">✓ Done</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Reminder Popup Modal -->
-  <div id="reminder-modal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <h2 id="modal-title">Journal Reminder</h2>
-      <p id="modal-desc">Take a minute to record check-in.</p>
-      <div class="modal-actions">
-        <button class="btn btn-primary" id="btn-modal-write">Write Journal</button>
-        <button class="btn btn-outline" id="btn-modal-later">Later</button>
-      </div>
-    </div>
-  </div>
-
+      <label class="checkbox-label"><input type="checkbox" id="autostart">Start with Windows</label>
+      <div class="storage-setting"><label for="folder-path" class="field-label">Save folder</label><div class="folder-picker"><input id="folder-path" class="text-input folder-input" readonly><button type="button" class="btn btn-secondary" id="browse">Browse</button></div></div>
+      <p id="settings-error" role="alert"></p>
+      <div class="modal-footer"><div class="reset-control"><button type="button" id="reset-settings" class="btn btn-link" title="Restore the default theme, blocks, and startup setting. Keeps your save folder, journals, and drafts.">Reset defaults</button><p id="settings-note" class="hint" role="status">Save to apply changes</p></div><button id="save-settings" class="btn btn-primary" type="submit">Save settings</button></div>
+    </form>
+  </dialog>
   <script src="app.js" type="module"></script>
 </body>
 </html>

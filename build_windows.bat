@@ -1,39 +1,20 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-
-echo ==========================================
-echo   Daily Journal (Rust) - Windows Build
-echo ==========================================
-echo.
-
-echo Checking Rust build toolchain...
-cargo --version
+cargo --version >nul 2>&1
 if errorlevel 1 (
-    echo Error: Cargo/Rust is not installed or not in PATH.
-    pause
-    exit /b 1
+  echo Rust is required. Install Rust and Microsoft C++ Build Tools first.
+  exit /b 1
 )
-
-echo.
-echo Compiling optimized release binary...
-set "CARGO_TARGET_DIR=%TEMP%\cargo_target_daily_journal"
-cargo build --release
+set "JOURNAL_BUILD_DIR=%~dp0target"
+if defined CARGO_TARGET_DIR set "JOURNAL_BUILD_DIR=%CARGO_TARGET_DIR%"
+echo Building Daily Journal 1.0...
+cargo build --release --locked
+if errorlevel 1 exit /b 1
+if not exist "dist" mkdir "dist"
+copy /y "%JOURNAL_BUILD_DIR%\release\daily_journal.exe" "dist\DailyJournal.exe" >nul
 if errorlevel 1 (
-    echo Error: Compilation failed.
-    pause
-    exit /b 1
+  echo Could not replace the executable. Exit Daily Journal from its tray menu and try again.
+  exit /b 1
 )
-
-if not exist "dist" mkdir dist
-copy /y "%CARGO_TARGET_DIR%\release\daily_journal.exe" "dist\DailyJournal.exe" > nul
-
-echo.
-echo ==========================================
-echo Build complete!
-echo ==========================================
-echo.
-echo High-performance standalone executable created:
-echo %CD%\dist\DailyJournal.exe
-echo.
-pause
+echo Ready: %CD%\dist\DailyJournal.exe

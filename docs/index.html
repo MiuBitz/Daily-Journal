@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Daily Journal is a minimal Windows app for quick work check-ins, optional notes, and weekly text files for reflection.">
+  <meta name="theme-color" content="#2866ad">
+  <title>Daily Journal - Quick check-ins. Clearer weeks.</title>
+  <link rel="icon" href="assets/icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header wrapper">
+    <a class="brand" href="#"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h4"/></svg>Daily Journal</a>
+    <nav aria-label="Main navigation"><a href="#guide">How to use</a><a href="https://github.com/TheMIU/DailyJournal">GitHub <span aria-hidden="true">&#8599;</span></a></nav>
+  </header>
+  <main id="main">
+    <section class="hero wrapper">
+      <div class="hero-copy">
+        <p class="eyebrow">A small Windows app for your working day</p>
+        <h1>A quick check-in.<br>A clearer week.</h1>
+        <p class="lede">Record what you worked on, then get back to it. Daily Journal turns a few short check-ins into one weekly text file you can reflect on.</p>
+        <div class="actions"><a class="button primary" href="https://github.com/TheMIU/DailyJournal/raw/refs/heads/main/dist/DailyJournal.exe">Download for Windows <span aria-hidden="true">&#8595;</span></a><a class="button secondary" href="#guide">See how it works</a></div>
+        <p class="small">Version 1.0 &middot; Windows x64 &middot; Works offline</p>
+      </div>
+      <figure class="app-preview"><div class="window-caption"><span class="window-dot"></span>Daily Journal</div><img src="assets/app-dark.png" alt="Daily Journal in dark blue: select a work block, write what you did, and save." width="540" height="690" fetchpriority="high"><figcaption>A sample entry in the default dark blue theme.</figcaption></figure>
+    </section>
+
+    <section class="benefits wrapper" aria-label="What makes it simple">
+      <div><h2>Write a little</h2><p>One box for your work. Notes only when you need them.</p></div>
+      <div><h2>Keep your rhythm</h2><p>Save with Ctrl + Enter. The app returns to the tray.</p></div>
+      <div><h2>See the whole week</h2><p>A plain text file, ready to read or share for feedback.</p></div>
+    </section>
+
+    <section id="guide" class="section wrapper">
+      <div class="section-heading"><p class="eyebrow">Your daily routine</p><h2>Three small steps.</h2><p>Start with the default blocks, or make the schedule yours.</p></div>
+      <div class="steps">
+        <article><span class="step-number">01</span><h3>Choose a block</h3><p>Open the app from your system tray. Choose Morning, Afternoon, or Evening, and use the date picker if you are catching up.</p></article>
+        <article><span class="step-number">02</span><h3>Write what you did</h3><p>Use a few words or a short list. Add optional notes for a win, interruption, or lesson. Unfinished drafts stay on your computer.</p></article>
+        <article><span class="step-number">03</span><h3>Save and continue</h3><p>Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> or choose Save &amp; continue. Your weekly file updates and the window returns to the tray.</p></article>
+      </div>
+    </section>
+
+    <section class="weekly-section">
+      <div class="wrapper split">
+        <div><p class="eyebrow">Make reflection easier</p><h2>A week you can<br>actually look back on.</h2><p>Each Monday-to-Sunday week has a single text file. Entries are grouped by date, with a work description for each saved block.</p><p>At the end of the week, choose <strong>Weekly text</strong> in the app. Read it yourself or share it with an AI you choose.</p><details class="prompt"><summary>A prompt to start with</summary><p>Review my work journal. Identify patterns in progress and interruptions, suggest three practical improvements, and help me choose priorities for next week. Distinguish evidence from assumptions.</p></details></div>
+        <div class="file-example"><div class="file-heading">week-2026-09-28.txt <span>Example</span></div><pre>Weekly work journal: 2026-09-28 to 2026-10-04
+
+Date - 2026-10-01
+
+Morning (05:00 - 12:00)
+Work - Finished the landing page and reviewed
+client feedback.
+Notes - Best focus before checking messages.
+
+Afternoon (12:00 - 18:00)
+Work - Fixed two bugs and planned tomorrow.</pre></div>
+      </div>
+    </section>
+
+    <section class="section wrapper split personalize">
+      <figure class="settings-preview"><img src="assets/settings-dark.png" alt="Settings with dark mode, blue accent, editable work blocks, and Reset defaults." width="540" height="690" loading="lazy"></figure>
+      <div><p class="eyebrow">Make it fit</p><h2>Your schedule.<br>Your kind of calm.</h2><p>Add, rename, or remove blocks. Set their time periods and choose which ones remind you at the end.</p><ul><li>Dark blue by default, with light mode available.</li><li>Four color presets: Blue, Violet, Sage, and Amber.</li><li>Inter typography, bundled for offline use.</li><li>A save folder you choose and optional Windows startup.</li></ul><p class="small">Reset defaults restores the appearance, blocks, and startup preference. Your save folder, journals, and drafts stay intact. Save settings to apply.</p></div>
+    </section>
+
+    <section class="section wrapper faq">
+      <div class="section-heading"><p class="eyebrow">Good to know</p><h2>Getting started.</h2></div>
+      <details open><summary>How do I install it?</summary><p>Download DailyJournal.exe, put it in a folder you want to keep, and run it. The app uses Microsoft Edge WebView2; if it is missing, install the <a href="https://developer.microsoft.com/en-us/microsoft-edge/webview2/">WebView2 Runtime</a>. Then open Settings to choose your save folder and reminder times.</p></details>
+      <details><summary>Where does my journal go?</summary><p>Entries are stored on your computer. The default folder is Documents / Daily Journal. Each week has a .txt file for reading and a matching .json file for editing through the app. Keep them together, and edit your entries in the app.</p></details>
+      <details><summary>Can I change an entry or fill in a previous day?</summary><p>Yes. Choose the date and block, then save your changes. Editing replaces that block's entry while keeping the rest of the week.</p></details>
+      <details><summary>How do reminders and the tray work?</summary><p>Closing the window keeps Daily Journal in the tray. Reminders arrive at each enabled block's end time while the app and Windows are running; already saved blocks are skipped. Reminders missed while the computer is off or asleep are not replayed. Use Exit in the tray menu to quit completely.</p></details>
+      <details><summary>Is there an account or built-in AI?</summary><p>The app runs locally and stores your work in your chosen folder. For AI feedback, share the weekly text file yourself with an agent you choose.</p></details>
+    </section>
+
+    <section class="closing wrapper"><h2>A minute now.<br>A useful record later.</h2><a class="button primary" href="https://github.com/TheMIU/DailyJournal/raw/refs/heads/main/dist/DailyJournal.exe">Get Daily Journal for Windows <span aria-hidden="true">&#8595;</span></a></section>
+  </main>
+  <footer class="site-footer wrapper"><span>Daily Journal 1.0</span><div><a href="https://github.com/TheMIU/DailyJournal">Source &amp; documentation</a><a href="assets/OFL.txt">Inter font license</a></div></footer>
+</body>
+</html>

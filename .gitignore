@@ -25,5 +25,13 @@ $RECYCLE.BIN/
 # macOS files
 .DS_Store
 
-# Executable outputs (Uncomment line below if you upload release executables via GitHub Releases instead of Git)
-# /dist/
+# Keep only the final distributable in source control.
+/dist/*
+!/dist/DailyJournal.exe
+
+# Never commit local journal data if the save folder is inside this repository.
+week-*.txt
+week-*.json
+????-??-??-morning.md
+????-??-??-afternoon.md
+????-??-??-evening.md

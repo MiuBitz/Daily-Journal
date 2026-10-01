@@ -2,6 +2,7 @@ mod config;
 mod journal;
 mod sound;
 mod startup;
+mod weekly;
 
 use config::{AppConfig, APP_NAME};
 use journal::{create_today_all, open_journal, open_journal_folder, today_str, JournalBlock};
@@ -16,14 +17,87 @@ use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, WindowEvent};
 
+static DATA_LOCK: Mutex<()> = Mutex::new(());
+
+#[tauri::command]
+fn hide_window(app: AppHandle) -> Result<(), String> {
+    app.get_webview_window("main")
+        .ok_or("Window unavailable")?
+        .hide()
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_default_config() -> AppConfig {
+    AppConfig::default()
+}
+
 #[tauri::command]
 fn get_config() -> AppConfig {
     AppConfig::load()
 }
 
 #[tauri::command]
-fn save_config(config: AppConfig) {
-    config.save();
+fn save_config(app: AppHandle, mut config: AppConfig) -> Result<(), String> {
+    let _guard = DATA_LOCK.lock().map_err(|e| e.to_string())?;
+    config::validate_blocks(&config.blocks)?;
+    config::validate_appearance(&config)?;
+    let previous = AppConfig::load();
+    config.last_reminded = previous.last_reminded;
+    let startup_changed = config.start_with_windows != previous.start_with_windows;
+    if startup_changed {
+        set_startup(config.start_with_windows)?;
+    }
+    if let Err(error) = config.try_save() {
+        if startup_changed {
+            let _ = set_startup(previous.start_with_windows);
+        }
+        return Err(error);
+    }
+    if let Some(window) = app.get_webview_window("main") {
+        let theme = if config.theme_mode == "light" {
+            tauri::Theme::Light
+        } else {
+            tauri::Theme::Dark
+        };
+        let _ = window.set_theme(Some(theme));
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn load_entries(date: String) -> Result<Vec<weekly::Entry>, String> {
+    weekly::load(&AppConfig::load().output_folder, &date)
+}
+
+#[tauri::command]
+fn save_entry(
+    date: String,
+    block_id: String,
+    work: String,
+    notes: String,
+) -> Result<String, String> {
+    let _guard = DATA_LOCK.lock().map_err(|e| e.to_string())?;
+    let cfg = AppConfig::load();
+    let block = cfg
+        .blocks
+        .iter()
+        .find(|b| b.id == block_id)
+        .ok_or("Block no longer exists. Reopen the entry.")?;
+    weekly::save(&cfg.output_folder, &date, block, &work, &notes)
+}
+
+#[tauri::command]
+fn open_week(date: String) -> Result<(), String> {
+    let _guard = DATA_LOCK.lock().map_err(|e| e.to_string())?;
+    let cfg = AppConfig::load();
+    let entries = weekly::load(&cfg.output_folder, &date)?;
+    if entries.is_empty() {
+        return Err("Save an entry first.".into());
+    }
+    let path = weekly::text_path(&cfg.output_folder, &date)?;
+    std::fs::write(&path, weekly::render(&date, &entries)?).map_err(|e| e.to_string())?;
+    open::that(path).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -81,42 +155,29 @@ fn check_boundaries_background(app_handle: AppHandle, last_check: Arc<Mutex<Opti
         *check = Some(minute_key);
     }
 
+    let Ok(_guard) = DATA_LOCK.lock() else {
+        return;
+    };
     let mut cfg = AppConfig::load();
     let current_time_str = now.format("%H:%M").to_string();
 
-    let target_block = if current_time_str == cfg.reminders.morning_time {
-        Some(JournalBlock::Morning)
-    } else if current_time_str == cfg.reminders.afternoon_time {
-        Some(JournalBlock::Afternoon)
-    } else if current_time_str == cfg.reminders.evening_time {
-        Some(JournalBlock::Evening)
-    } else {
-        None
-    };
-
-    if let Some(block) = target_block {
-        let key = block.key();
-        let is_enabled = match block {
-            JournalBlock::Morning => cfg.reminders.morning,
-            JournalBlock::Afternoon => cfg.reminders.afternoon,
-            JournalBlock::Evening => cfg.reminders.evening,
-        };
-
+    for block in cfg.blocks.clone() {
         let today = today_str();
-        let already_reminded = cfg
-            .last_reminded
-            .get(key)
-            .map(|s| s == &today)
-            .unwrap_or(false);
-
-        if is_enabled && !already_reminded {
-            cfg.last_reminded.insert(key.to_string(), today);
+        if block.reminder
+            && current_time_str == block.end
+            && cfg.last_reminded.get(&block.id) != Some(&today)
+        {
+            let saved = weekly::load(&cfg.output_folder, &today).unwrap_or_default();
+            if saved
+                .iter()
+                .any(|e| e.date == today && e.block_id == block.id)
+            {
+                continue;
+            }
+            cfg.last_reminded.insert(block.id.clone(), today);
             cfg.save();
-
             play_reminder_sound();
-
-            let _ = app_handle.emit("reminder-triggered", key);
-
+            let _ = app_handle.emit("reminder-triggered", &block.id);
             if let Some(window) = app_handle.get_webview_window("main") {
                 let _ = window.show();
                 let _ = window.unminimize();
@@ -139,6 +200,12 @@ pub fn run() {
             }
 
             if let Some(window) = app.get_webview_window("main") {
+                let theme = if config.theme_mode == "light" {
+                    tauri::Theme::Light
+                } else {
+                    tauri::Theme::Dark
+                };
+                let _ = window.set_theme(Some(theme));
                 if start_hidden {
                     let _ = window.hide();
                 } else {
@@ -149,14 +216,18 @@ pub fn run() {
 
             // System Tray Setup
             let open_item = MenuItem::with_id(app, "open", "Open Journal", true, None::<&str>)?;
-            let write_item = MenuItem::with_id(app, "write", "Write Current Block", true, None::<&str>)?;
-            let folder_item = MenuItem::with_id(app, "folder", "Open Journal Folder", true, None::<&str>)?;
+            let write_item =
+                MenuItem::with_id(app, "write", "Write Current Block", true, None::<&str>)?;
+            let folder_item =
+                MenuItem::with_id(app, "folder", "Open Journal Folder", true, None::<&str>)?;
             let exit_item = MenuItem::with_id(app, "exit", "Exit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open_item, &write_item, &folder_item, &exit_item])?;
 
             let handle = app.handle().clone();
             let icon_bytes = include_bytes!("../icons/32x32.png");
-            let img = image::load_from_memory(icon_bytes).expect("Failed to load icon").to_rgba8();
+            let img = image::load_from_memory(icon_bytes)
+                .expect("Failed to load icon")
+                .to_rgba8();
             let (width, height) = img.dimensions();
             let tray_icon = tauri::image::Image::new_owned(img.into_raw(), width, height);
 
@@ -174,7 +245,24 @@ pub fn run() {
                     }
                     "write" => {
                         let cfg = AppConfig::load();
-                        let _ = open_journal(&cfg.output_folder, None, Some(&cfg.reminders));
+                        let time = Local::now().format("%H:%M").to_string();
+                        let block = cfg
+                            .blocks
+                            .iter()
+                            .find(|b| {
+                                if b.start < b.end {
+                                    time >= b.start && time < b.end
+                                } else {
+                                    time >= b.start || time < b.end
+                                }
+                            })
+                            .unwrap_or(&cfg.blocks[0]);
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.unminimize();
+                            let _ = window.set_focus();
+                        }
+                        let _ = app.emit("reminder-triggered", &block.id);
                     }
                     "folder" => {
                         let cfg = AppConfig::load();
@@ -218,6 +306,11 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            hide_window,
+            load_entries,
+            save_entry,
+            open_week,
+            get_default_config,
             get_config,
             save_config,
             get_today_str,

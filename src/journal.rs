@@ -79,7 +79,11 @@ pub fn template_for(block: JournalBlock, rem: Option<&RemindersConfig>) -> Strin
     )
 }
 
-pub fn open_journal(output_folder: &str, block: Option<JournalBlock>, rem: Option<&RemindersConfig>) -> Result<PathBuf, String> {
+pub fn open_journal(
+    output_folder: &str,
+    block: Option<JournalBlock>,
+    rem: Option<&RemindersConfig>,
+) -> Result<PathBuf, String> {
     let target_block = block.unwrap_or_else(block_for_now);
     let folder = PathBuf::from(output_folder);
     if let Err(e) = fs::create_dir_all(&folder) {

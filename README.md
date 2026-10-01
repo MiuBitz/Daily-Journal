@@ -1,94 +1,182 @@
-# 📓 Daily Journal v2 (Windows)
+# Daily Journal
 
-> A fast, lightweight Windows background utility for structured daily Markdown journaling. Built with **Tauri v2 (Rust + Web UI)**.
+**Quick check-ins. Clearer weeks.**
 
-![Windows](https://img.shields.io/badge/OS-Windows-blue?style=flat-square&logo=windows)
-![Rust](https://img.shields.io/badge/Language-Rust-orange?style=flat-square&logo=rust)
-![Tauri](https://img.shields.io/badge/Framework-Tauri_v2-24C8D8?style=flat-square&logo=tauri)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+Daily Journal is a minimal Windows tray app for recording what you worked on without opening a separate text editor. Write a short entry for a time block, save it, and get back to work. The app collects your saved entries into one readable text file per week.
 
----
+![Daily Journal in its default dark blue theme](docs/assets/app-dark.png)
 
-## ✨ Features
+[Download the Windows app](https://github.com/TheMIU/DailyJournal/raw/refs/heads/main/dist/DailyJournal.exe) · [How to use](#how-to-use) · [Build from source](#build-from-source)
 
-- ⚡ **Ultra-Lightweight Performance**: Consumes **0.0% CPU** when idle and uses only **~18 MB RAM**.
-- 📌 **Native System Tray Integration**: Minimizes silently to the system tray. Context menu supports *Open Journal*, *Write Current Block*, *Open Journal Folder*, and *Exit*.
-- ⏰ **Customizable Reminder Times**: Set personalized 24-hour schedules (`HH:MM`) for **Morning**, **Afternoon**, and **Evening** check-ins.
-- 📝 **Clean Markdown File Generator**: Automatically creates and opens structured Markdown files organized by block and date (`YYYY-MM-DD`).
-- 🚀 **Silent Windows Startup**: Option to automatically launch with Windows silently in the tray without console window popups.
-- 🎨 **Modern Dark UI**: Built with a sleek dark card aesthetic (`#12141A` background, indigo accents `#6366F1`, and green status badges).
+## What it does
 
----
+- Quick work entry with optional notes, saved with **Ctrl + Enter**.
+- Custom blocks: add, rename, remove, and change start/end times.
+- Optional reminders at the end of each block; already saved blocks are skipped.
+- Weekly `.txt` files grouped by date, ready for personal reflection or AI feedback.
+- Local drafts, editable saved entries, and a date picker for catching up.
+- A quiet tray workflow and optional Windows startup.
+- Inter typography, Light/Dark modes, and Blue, Violet, Sage, or Amber accents.
+- **Reset defaults** in Settings, with journals and drafts preserved.
 
-## 🛠 Tech Stack
+The default appearance is **Dark + Blue**. Existing saved preferences are kept when you upgrade.
 
-- **Backend**: Rust 2021 + Tauri v2 (`tauri`, `chrono`, `open`, `windows-sys`, `rfd`)
-- **Frontend**: HTML5, CSS3 (Vanilla), JavaScript (WebView2)
-- **Audio & Tray**: Windows Multimedia Sound API + Native Win32 Tray Icon
+## Get started
 
----
+1. Download [DailyJournal.exe](https://github.com/TheMIU/DailyJournal/raw/refs/heads/main/dist/DailyJournal.exe), or use `dist/DailyJournal.exe` from this repository.
+2. Put the executable in a folder you want to keep, then run it. Exit any older version from its tray menu before switching to this build.
+3. Open **Settings** to choose your save folder, blocks, reminder times, and Windows startup preference.
 
-## 📂 Project Structure
+This build is for **Windows x64**. The app needs the [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/). If the runtime is missing on your computer, install it before running the app.
 
+There is one final executable: `dist/DailyJournal.exe`. No installer, account, or Node.js installation is needed to use it.
+
+## How to use
+
+### Record your work
+
+1. Choose the date and block.
+2. Type what you did during that time period. A sentence or a short list is enough.
+3. Expand **Notes** only if there is something worth remembering.
+4. Press **Ctrl + Enter** or choose **Save & continue**.
+
+The entry is saved directly, the weekly text file updates, and the window returns to the tray.
+
+Unsubmitted text stays in local draft storage for each date, block, and save folder. Drafts are **not** included in your weekly file until you save them.
+
+### Edit or catch up
+
+Choose a saved block to edit it. Saving replaces that date/block entry while keeping the rest of the week. Use the date picker to fill in a previous day.
+
+Entries keep the block name and time period they had when last saved. Changing your schedule does not rewrite past entries; editing and saving an old entry records the current block settings.
+
+### Reminders and the tray
+
+Closing the window keeps the app running in the system tray. Click the tray icon to reopen it, or right-click for **Write Current Block**, **Open Journal Folder**, and **Exit**.
+
+Reminders arrive at enabled block end times while Windows and the app are running. They play a short sound and open the entry window. A block already saved for that day does not remind you again. Reminders missed while the app is stopped or the computer is off/asleep are not replayed.
+
+## Settings
+
+![Daily Journal settings](docs/assets/settings-dark.png)
+
+| Setting | Behavior |
+| --- | --- |
+| Appearance | Preview Light/Dark mode and one of four color presets. |
+| Work blocks | Add, remove, or rename blocks; change their periods and reminder toggles. Overnight periods are supported. |
+| Start with Windows | Launch silently in the tray when you sign in. Enabled by default. |
+| Save folder | Choose where the weekly text and editable data files are stored. |
+| Reset defaults | Restore Dark + Blue, Morning/Afternoon/Evening blocks, and the default startup preference. Keep the current save folder, journal files, drafts, and reminder history. |
+
+Settings changes, including a reset, are staged until you choose **Save settings**. Closing Settings without saving discards them and restores the previous appearance.
+
+The default blocks are Morning **05:00–12:00**, Afternoon **12:00–18:00**, and Evening **18:00–22:00**. Reminder times are each block's end time.
+
+## Weekly files and reflection
+
+Files are named for the Monday of their week:
+
+```text
+Daily Journal/
+  week-2026-09-28.txt
+  week-2026-09-28.json
 ```
-Miu_Daily_Journal_v2_Windows/
-├── src/                 # Rust backend logic
-│   ├── lib.rs           # Tauri IPC commands & system tray setup
-│   ├── config.rs        # App configuration & JSON persistence
-│   ├── journal.rs       # Markdown template generator & file opening logic
-│   ├── sound.rs         # Audio reminder alert triggers
-│   └── startup.rs       # Windows autostart shortcut management
-├── ui/                  # Web frontend assets
-│   ├── index.html       # Main UI structure & modal containers
-│   ├── style.css        # Modern dark theme styles
-│   └── app.js           # Frontend logic & Tauri IPC bindings
-├── icons/               # Multi-resolution application & tray icons
-├── dist/                # Pre-built standalone executable
-│   └── DailyJournal.exe # Single-file production binary
-├── tauri.conf.json      # Tauri v2 application configuration
-├── build_windows.bat    # One-click Windows build script
-└── Cargo.toml           # Rust dependencies & manifest
+
+The `.txt` file is for reading and sharing. The companion `.json` file stores the editable entries. **Keep both files together**, and edit your journal through the app: the text file is generated from the JSON data.
+
+Example text output:
+
+```text
+Weekly work journal: 2026-09-28 to 2026-10-04
+
+Date - 2026-10-01
+
+Morning (05:00 - 12:00)
+Work - Finished the landing page and reviewed client feedback.
+Notes - Best focus before checking messages.
+
+Afternoon (12:00 - 18:00)
+Work - Fixed two bugs and planned tomorrow.
 ```
 
----
+Only saved entries appear, ordered by date and block start time. Empty optional notes are omitted. Choose **Weekly text** to open the selected date's week, or **Open folder** to find files for sharing.
 
-## 🚀 Getting Started
+A useful prompt for an AI agent:
 
-### Method 1: Use Pre-built Executable
-Simply run the standalone executable located at:
-```
-dist/DailyJournal.exe
-```
+> Review my work journal. Identify patterns in progress and interruptions, suggest three practical improvements, and help me choose priorities for next week. Distinguish evidence from assumptions.
 
-### Method 2: Build From Source
+## Local storage
 
-#### Prerequisites
-1. Install [Rust](https://www.rust-lang.org/tools/install) (with `x86_64-pc-windows-msvc` toolchain).
-2. Install C++ Build Tools (included with Visual Studio or Build Tools for Visual Studio).
+- Journals: your chosen folder; by default `%USERPROFILE%\Documents\Daily Journal`.
+- Settings: `%APPDATA%\DailyJournal\config.json`.
+- Drafts: local WebView storage on this computer.
 
-#### Building
-Run the one-click build script:
-```cmd
+The app works offline, with Inter bundled locally. It does not upload your journal or send entries to an AI. You choose when to share a weekly text file.
+
+Older reminder schedules migrate to editable blocks. Existing Markdown journal files stay in their folder; they are not automatically imported into weekly files.
+
+## Build from source
+
+Required:
+
+- [Rust](https://rustup.rs/) with the `x86_64-pc-windows-msvc` toolchain.
+- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the Desktop development with C++ workload and a Windows SDK.
+- Microsoft Edge WebView2 Runtime to run the app.
+
+Run:
+
+```bat
 build_windows.bat
 ```
 
-Or build manually via Cargo:
-```cmd
-cargo build --release
+The script builds the locked dependencies in release mode and copies the standalone executable to `dist/DailyJournal.exe`. Exit the running app before replacing that file. It uses the workspace `target` directory unless `CARGO_TARGET_DIR` is already set.
+
+Or compile manually:
+
+```powershell
+cargo build --release --locked
 ```
-The compiled executable will be output to `dist/DailyJournal.exe`.
 
----
+The executable is `target/release/daily_journal.exe` when using the default Cargo target directory.
 
-## 📖 Usage Guide
+### Checks
 
-1. **Write Entry**: Click **✏ Write Journal** on any block card to open/create today's Markdown check-in file in your default Markdown editor (e.g., Obsidian, VS Code, Notepad).
-2. **Batch Create**: Click **📝 Create Today's Files** to generate all 3 Markdown check-in files for today at once.
-3. **Customize Schedule**: Open **⚙ Settings** to edit your preferred check-in reminder times (`12:00`, `18:00`, `22:00`) or toggle Windows Autostart.
-4. **System Tray**: Closing the window hides the app to the system tray. Left-click the tray icon to restore the window.
+```powershell
+cargo test --lib --locked
+node tests/frontend.cjs
+```
 
----
+The Rust tests cover weekly grouping, replacement of entries, settings migration, and validation. The dependency-free frontend checks cover draft recovery, failed saves, appearance preview/save/cancel, and a reset that preserves the folder and journal data. Node.js is needed only to run the frontend checks.
 
-## 📜 License
+## Project structure
 
-Distributed under the MIT License. See `LICENSE` for more information.
+```text
+src/              Rust backend: settings, journal storage, reminders, tray, startup
+ui/               App HTML, CSS, JavaScript, and bundled Inter font
+capabilities/     Tauri permissions for receiving reminder events
+icons/            Application and tray icons
+dist/             The final DailyJournal.exe build
+docs/             Static project webpage, screenshots, and font assets
+tests/            Frontend behavior checks
+build_windows.bat Windows release build script
+```
+
+Built with Tauri v2, Rust, and plain HTML/CSS/JavaScript.
+
+## Project webpage
+
+The `docs/` folder contains a static webpage explaining what the app does and how to use it. It needs no package installation or build step. Open `docs/index.html` locally, or preview it with:
+
+```powershell
+python -m http.server 8000 --directory docs
+```
+
+Then visit `http://localhost:8000`.
+
+After pushing this repository to GitHub, publish the page from **Settings → Pages → Deploy from a branch**, selecting **main** and **/docs**. See [GitHub's publishing-source guide](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site). Download links point to `dist/DailyJournal.exe` on `main`, so include the final executable when pushing. The webpage is prepared locally; publishing it is a separate step.
+
+For a tagged GitHub release, attach `dist/DailyJournal.exe` as the Windows download.
+
+## Third-party notices
+
+Inter is by Rasmus Andersson and is distributed under the SIL Open Font License 1.1. Its license is included in `ui/fonts/OFL.txt` and `docs/assets/OFL.txt`. Rust dependencies retain their respective licenses.
