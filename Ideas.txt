@@ -1,0 +1,11 @@
+easy
+- [x] add fontawsome icons for web doc
+- [x] make the steps better with icons
+- [x] make the review part as step 4. give a good focuss to the ai reflect idea. its the best thing in this system
+
+
+Mid
+- in settings, add 24 time or 12h time (astra work)
+
+later
+- can make it for android
