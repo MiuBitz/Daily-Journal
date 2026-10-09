@@ -417,6 +417,23 @@ h1 {
   margin-top: 24px;
 }
 
+.project-credit {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.project-credit a,
+.footer-left .brand-link {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.project-credit i {
+  font-size: 10px;
+  margin-left: 3px;
+}
+
 .pill {
   font-size: 12px;
   font-weight: 500;
