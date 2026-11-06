@@ -154,3 +154,53 @@ mod tests {
         fs::remove_dir_all(folder).unwrap();
     }
 }
+
+// Catch up the latest scheduled review once, using its week rather than today's week.
+pub fn reminder_due(
+    reminder: &crate::config::WeeklyReminder,
+    now: chrono::NaiveDateTime,
+) -> Option<String> {
+    if !reminder.enabled || reminder.day > 6 {
+        return None;
+    }
+    let time = chrono::NaiveTime::parse_from_str(&reminder.time, "%H:%M").ok()?;
+    let days = (now.weekday().num_days_from_monday() + 7 - reminder.day) % 7;
+    let mut date = now.date() - Duration::days(days as i64);
+    if date.and_time(time) > now {
+        date -= Duration::days(7);
+    }
+    let date = date.to_string();
+    if reminder
+        .last_shown
+        .as_ref()
+        .is_some_and(|last| last >= &date)
+    {
+        None
+    } else {
+        Some(date)
+    }
+}
+
+#[cfg(test)]
+mod reminder_tests {
+    use super::*;
+    #[test]
+    fn schedule_catches_up_once_and_keeps_review_week() {
+        let mut reminder = crate::config::WeeklyReminder::default();
+        let at =
+            |date: &str| chrono::NaiveDateTime::parse_from_str(date, "%Y-%m-%d %H:%M").unwrap();
+        assert_eq!(
+            reminder_due(&reminder, at("2026-10-17 09:00")).as_deref(),
+            Some("2026-10-17")
+        );
+        reminder.last_shown = Some("2026-10-17".into());
+        assert_eq!(reminder_due(&reminder, at("2026-10-19 10:00")), None);
+        assert_eq!(reminder_due(&reminder, at("2026-10-24 08:59")), None);
+        assert_eq!(
+            reminder_due(&reminder, at("2026-10-24 09:00")).as_deref(),
+            Some("2026-10-24")
+        );
+        reminder.enabled = false;
+        assert_eq!(reminder_due(&reminder, at("2026-10-31 09:00")), None);
+    }
+}

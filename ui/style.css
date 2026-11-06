@@ -155,3 +155,10 @@ input[type=checkbox] { accent-color: var(--primary); width: 14px; height: 14px; 
 :root[data-preset="violet"] { --primary: #7163ca; }
 .reset-control .btn { padding: 4px 0; }
 .reset-control .hint { max-width: 185px; }
+
+.review-schedule { margin-top: 12px; flex-wrap: wrap; }
+.review-file { overflow-wrap: anywhere; }
+.review-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+#review-dialog { padding: 24px; }
+
+#review-dialog > p { margin: 12px 0; }

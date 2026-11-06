@@ -13,6 +13,7 @@ Daily Journal is a minimal Windows tray app for recording what you worked on wit
 - Quick work entry with optional notes, saved with **Ctrl + Enter**.
 - Custom blocks: add, rename, remove, and change start/end times.
 - Optional reminders at the end of each block; already saved blocks are skipped.
+- A weekly review reminder (Saturday at 9:00 AM by default), with a copyable AI prompt and journal.
 - Weekly `.txt` files grouped by date, ready for personal reflection or AI feedback.
 - Local drafts, editable saved entries, and a date picker for catching up.
 - A quiet tray workflow and optional Windows startup.
@@ -56,6 +57,14 @@ Closing the window keeps the app running in the system tray. Click the tray icon
 
 Reminders arrive at enabled block end times while Windows and the app are running. They play a short sound and open the entry window. A block already saved for that day does not remind you again. Reminders missed while the app is stopped or the computer is off/asleep are not replayed.
 
+### Reflect on your week
+
+In **Settings > Weekly review**, choose a day and local time, or turn the reminder off. The default is **Saturday at 9:00 AM**. The reminder opens a review box with your weekly file and an AI feedback prompt. Choose **Copy prompt + journal** and paste it into your AI chat, or open the text file and attach it with **Copy prompt**. Nothing is sent automatically.
+
+**Later** closes the box while keeping the review available on the next launch. **Done for this week** dismisses it. You can also use **Weekly review** in the main toolbar for the selected date.
+
+The app must run to deliver reminders. When restarted, it catches up the most recent scheduled review once; empty weeks are skipped. Weekly files remain Monday–Sunday, so Saturday's review includes entries saved so far, not future weekend entries.
+
 ## Settings
 
 ![Daily Journal settings](docs/assets/settings-dark.png)
@@ -64,6 +73,7 @@ Reminders arrive at enabled block end times while Windows and the app are runnin
 | --- | --- |
 | Appearance | Preview Light/Dark mode and one of four color presets. |
 | Work blocks | Add, remove, or rename blocks; change their periods and reminder toggles. Overnight periods are supported. |
+| Weekly review | Enable or disable the weekly reminder and choose its day/time. Defaults to Saturday, 09:00. |
 | Start with Windows | Launch silently in the tray when you sign in. Enabled by default. |
 | Save folder | Choose where the weekly text and editable data files are stored. |
 | Reset defaults | Restore Dark + Blue, Morning/Afternoon/Evening blocks, and the default startup preference. Keep the current save folder, journal files, drafts, and reminder history. |

@@ -42,8 +42,16 @@ fn save_config(app: AppHandle, mut config: AppConfig) -> Result<(), String> {
     let _guard = DATA_LOCK.lock().map_err(|e| e.to_string())?;
     config::validate_blocks(&config.blocks)?;
     config::validate_appearance(&config)?;
+    if config.weekly_reminder.day > 6
+        || config.weekly_reminder.time.len() != 5
+        || chrono::NaiveTime::parse_from_str(&config.weekly_reminder.time, "%H:%M").is_err()
+    {
+        return Err("Choose a valid weekly reminder day and time.".into());
+    }
     let previous = AppConfig::load();
     config.last_reminded = previous.last_reminded;
+    config.weekly_reminder.last_shown = previous.weekly_reminder.last_shown;
+    config.weekly_reminder.pending = previous.weekly_reminder.pending;
     let startup_changed = config.start_with_windows != previous.start_with_windows;
     if startup_changed {
         set_startup(config.start_with_windows)?;
@@ -98,6 +106,34 @@ fn open_week(date: String) -> Result<(), String> {
     let path = weekly::text_path(&cfg.output_folder, &date)?;
     std::fs::write(&path, weekly::render(&date, &entries)?).map_err(|e| e.to_string())?;
     open::that(path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_weekly_reminder() -> Option<String> {
+    AppConfig::load().weekly_reminder.pending
+}
+
+#[tauri::command]
+fn dismiss_weekly_reminder(date: String) -> Result<(), String> {
+    let _guard = DATA_LOCK.lock().map_err(|e| e.to_string())?;
+    let mut cfg = AppConfig::load();
+    if cfg.weekly_reminder.pending.as_ref() == Some(&date) {
+        cfg.weekly_reminder.pending = None;
+    }
+    cfg.try_save()
+}
+
+#[tauri::command]
+fn weekly_review(date: String) -> Result<serde_json::Value, String> {
+    let _guard = DATA_LOCK.lock().map_err(|e| e.to_string())?;
+    let cfg = AppConfig::load();
+    let entries = weekly::load(&cfg.output_folder, &date)?;
+    let path = weekly::text_path(&cfg.output_folder, &date)?;
+    let text = weekly::render(&date, &entries)?;
+    if !entries.is_empty() {
+        std::fs::write(&path, &text).map_err(|e| e.to_string())?;
+    }
+    Ok(serde_json::json!({"path": path, "text": text, "empty": entries.is_empty()}))
 }
 
 #[tauri::command]
@@ -160,6 +196,26 @@ fn check_boundaries_background(app_handle: AppHandle, last_check: Arc<Mutex<Opti
     };
     let mut cfg = AppConfig::load();
     let current_time_str = now.format("%H:%M").to_string();
+
+    if let Some(date) = weekly::reminder_due(&cfg.weekly_reminder, now.naive_local()) {
+        cfg.weekly_reminder.last_shown = Some(date.clone());
+        // Avoid interrupting for an empty week, including a fresh installation.
+        let has_entries = weekly::load(&cfg.output_folder, &date)
+            .map(|entries| !entries.is_empty())
+            .unwrap_or(false);
+        if has_entries {
+            cfg.weekly_reminder.pending = Some(date.clone());
+        }
+        if cfg.try_save().is_ok() && has_entries {
+            play_reminder_sound();
+            let _ = app_handle.emit("weekly-review-triggered", &date);
+            if let Some(window) = app_handle.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+        }
+    }
 
     for block in cfg.blocks.clone() {
         let today = today_str();
@@ -310,6 +366,9 @@ pub fn run() {
             load_entries,
             save_entry,
             open_week,
+            weekly_review,
+            get_weekly_reminder,
+            dismiss_weekly_reminder,
             get_default_config,
             get_config,
             save_config,

@@ -46,7 +46,7 @@
     <footer class="toolbar">
       <button class="btn btn-link" id="week"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7zM14 3v5h4M10 12h5M10 16h5"/></svg>Weekly text</button>
       <button class="btn btn-link" id="folder"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7V5h6l2 2h10v13H3z"/></svg>Open folder</button>
-      <span class="hint weekly-hint">One file per week</span>
+      <button class="btn btn-link" id="review">Weekly review</button>
     </footer>
     <div id="toast" class="toast hidden" role="status"></div>
   </main>
@@ -68,11 +68,31 @@
       <div id="block-settings"></div>
       <button type="button" class="btn btn-link add-block" id="add-block">+ Add block</button>
       <div class="divider"></div>
+      <section aria-labelledby="weekly-title">
+        <h3 id="weekly-title">Weekly review</h3>
+        <label class="checkbox-label"><input type="checkbox" id="weekly-enabled">Remind me to reflect on my week</label>
+        <div class="schedule-row review-schedule">
+          <label>Day <select id="weekly-day" class="text-input"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></label>
+          <label>Time <input id="weekly-time" type="time" class="text-input" required value="09:00"></label>
+        </div>
+        <p class="hint">Local time. Missed reminders appear when the app next runs. Reviews use Monday–Sunday files; Saturday includes entries saved so far.</p>
+      </section>
+      <div class="divider"></div>
       <label class="checkbox-label"><input type="checkbox" id="autostart">Start with Windows</label>
       <div class="storage-setting"><label for="folder-path" class="field-label">Save folder</label><div class="folder-picker"><input id="folder-path" class="text-input folder-input" readonly><button type="button" class="btn btn-secondary" id="browse">Browse</button></div></div>
       <p id="settings-error" role="alert"></p>
       <div class="modal-footer"><div class="reset-control"><button type="button" id="reset-settings" class="btn btn-link" title="Restore the default theme, blocks, and startup setting. Keeps your save folder, journals, and drafts.">Reset defaults</button><p id="settings-note" class="hint" role="status">Save to apply changes</p></div><button id="save-settings" class="btn btn-primary" type="submit">Save settings</button></div>
     </form>
+  </dialog>
+  <dialog id="review-dialog" class="settings-card" aria-labelledby="review-title">
+    <div class="modal-header"><div><h2 id="review-title">Time to reflect</h2><p class="hint">A few minutes to learn from your week.</p></div><button id="close-review" class="btn btn-secondary">Later</button></div>
+    <p id="review-file" class="hint review-file"></p>
+    <p id="review-empty" class="hint"></p>
+    <p>Attach the weekly text file to your AI chat and paste this prompt, or copy the prompt and journal together.</p>
+    <textarea id="review-prompt" rows="6" aria-label="AI feedback prompt" readonly></textarea>
+    <div class="review-actions"><button id="review-open" class="btn btn-secondary">Open weekly file</button><button id="review-folder" class="btn btn-secondary">Open folder</button><button id="review-copy-prompt" class="btn btn-secondary">Copy prompt</button><button id="review-copy-all" class="btn btn-primary">Copy prompt + journal</button></div>
+    <p id="review-status" class="hint" role="status"></p>
+    <button id="review-done" class="btn btn-link">Done for this week</button>
   </dialog>
   <script src="app.js" type="module"></script>
 </body>

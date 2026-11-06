@@ -54,9 +54,32 @@ pub struct WorkBlock {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct WeeklyReminder {
+    pub enabled: bool,
+    pub day: u32,
+    pub time: String,
+    pub last_shown: Option<String>,
+    pub pending: Option<String>,
+}
+impl Default for WeeklyReminder {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            day: 5,
+            time: "09:00".into(),
+            last_shown: None,
+            pending: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
     #[serde(default = "default_theme_mode")]
     pub theme_mode: String,
+    #[serde(default)]
+    pub weekly_reminder: WeeklyReminder,
     #[serde(default = "default_color_preset")]
     pub color_preset: String,
     pub output_folder: String,
@@ -73,6 +96,7 @@ impl Default for AppConfig {
         let default_output = dirs_next_output_folder();
         Self {
             theme_mode: default_theme_mode(),
+            weekly_reminder: WeeklyReminder::default(),
             color_preset: default_color_preset(),
             output_folder: default_output,
             blocks: legacy_blocks(&RemindersConfig::default()),
@@ -219,6 +243,16 @@ mod tests {
         assert!(validate_appearance(&config).is_err());
     }
 
+    #[test]
+    fn old_configs_get_saturday_review_without_losing_preferences() {
+        let mut value = serde_json::to_value(AppConfig::default()).unwrap();
+        value.as_object_mut().unwrap().remove("weekly_reminder");
+        let config: AppConfig = serde_json::from_value(value).unwrap();
+        assert!(config.weekly_reminder.enabled);
+        assert_eq!(config.weekly_reminder.day, 5);
+        assert_eq!(config.weekly_reminder.time, "09:00");
+        assert_eq!(config.color_preset, "blue");
+    }
     #[test]
     fn existing_config_retains_reminder_times() {
         let mut config = AppConfig::default();
